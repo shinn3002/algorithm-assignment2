@@ -1,0 +1,98 @@
+import java.util.*;
+
+public class Main {
+
+    private static final String[] STATES = {
+        "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware",
+        "Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana",
+        "Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana",
+        "Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina",
+        "North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina",
+        "South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia",
+        "Wisconsin","Wyoming"
+    };
+
+    private static final String TEXT = String.join(" ", STATES);
+
+    private static int[] buildLast(String pattern) {
+        int[] last = new int[256];
+        Arrays.fill(last, -1);
+        for (int i = 0; i < pattern.length(); i++) {
+            char c = pattern.charAt(i);
+            if (c < 256) last[c] = i;   
+        }
+        return last;
+    }
+
+    public static List<Integer> bmBadCharAll(String text, String pattern) {
+        List<Integer> res = new ArrayList<>();
+        if (pattern.isEmpty()) return res;
+        int n = text.length();
+        int m = pattern.length();
+        if (m > n) return res;
+
+        String t = text.toLowerCase(Locale.ROOT);
+        String p = pattern.toLowerCase(Locale.ROOT);
+
+        int[] last = buildLast(p);
+        int i = 0; 
+        while (i <= n - m) {
+            int j = m - 1; 
+            while (j >= 0 && p.charAt(j) == t.charAt(i + j)) j--;
+            if (j < 0) {
+                res.add(i);              
+                i += (i + m < n) ? m - last[(int)t.charAt(i + m)] : 1;
+            } else {
+                int bad = t.charAt(i + j);
+                int shift = Math.max(1, j - (bad < 256 ? last[bad] : -1));
+                i += shift;
+            }
+        }
+        return res;
+    }
+
+    private static void printMenu() {
+        System.out.println("\n==== Boyer-Moore (Bad Character) Search ====");
+        System.out.println("1) Display the text (50 US states)");
+        System.out.println("2) Search");
+        System.out.println("3) Exit program");
+        System.out.print("Select [1-3]: ");
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        while (true) {
+            printMenu();
+            String sel = sc.nextLine().trim();
+            System.out.println();
+            switch (sel) {
+                case "1" -> {
+                    System.out.println("---- Text (50 states, single-line) ----");
+                    System.out.println(TEXT);
+                    System.out.println("\nLength: " + TEXT.length() + " characters");
+                    System.out.println("(Indices reported by Search are 0-based in this text)");
+                }
+                case "2" -> {
+                    System.out.print("Enter pattern (part of a state name): ");
+                    String pat = sc.nextLine();
+                    if (pat.isEmpty()) {
+                        System.out.println("Pattern must not be empty.");
+                        break;
+                    }
+                    List<Integer> idx = bmBadCharAll(TEXT, pat);
+                    if (idx.isEmpty()) {
+                        System.out.println("No matches.");
+                    } else {
+                        System.out.println("Matches at indices (0-based): " + idx);
+                        System.out.println("Count: " + idx.size());
+                    }
+                }
+                case "3" -> {
+                    System.out.println("Bye!");
+                    return;
+                }
+                default -> System.out.println("Please enter 1, 2, or 3.");
+            }
+        }
+    }
+}
